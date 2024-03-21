@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Face rating experiment</title>
+    <script src="https://unpkg.com/jspsych@7.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.0.0"></script>
+
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-slider-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-instructions@1.0.0"></script>
+    <link href="https://unpkg.com/jspsych@7.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="my_experiment_style.css">
+    <script type="text/javascript" src="./socket.io/socket.io.js"></script>
+    <script src="functions.js"></script>
+    <script src="stimulus_information.json"></script>
+  </head>
+  <body></body>
+  <script>
+    /* initialize jsPsych */
+    var jsPsych = initJsPsych({
+      on_finish: function() {
+        console.log('Experiment complete!!!');
+        window.location = 'https://theuselessweb.com/'; // 'https://app.prolific.com/submissions/complete?cc=CK5XXXER'
+
+        //jsPsych.data.displayData();
+      }
+    });
+    var subject_id = jsPsych.data.getURLVariable('PROLIFIC_PID');
+    var study_id = jsPsych.data.getURLVariable('STUDY_ID');
+    var session_id = jsPsych.data.getURLVariable('SESSION_ID');
+    console.log('Subject ID: ' + subject_id);
+    console.log('Study ID: ' + study_id);
+    console.log('Session ID: ' + session_id);
+    jsPsych.data.addProperties({
+      subject_id: subject_id,
+      study_id: study_id,
+      session_id: session_id
+    });
+
+    /* create timeline */
+    var numTrials = 10;
+
+    /* preload images */
+    var preload = {
+      type: jsPsychPreload,
+      auto_preload: true
+    };
+
+    /* define instructions trial */
+    var instructions = {
+      type: jsPsychInstructions,
+      pages: [
+        // First page: Welcome!
+        "<p style= 'font-size:200%' ><b>Welcome to our experiment!</b></br></p>" +
+        "<p>This is a visual judgment experiment. Let's start off with some instructions </p>.",
+        "<p style= 'font-size:150%'><b>Experiment Instructions</b></br></p>" +
+        "<p>In this experiment, you will complete a series of trials. On each trial, you will be shown an image. Below it will be a slider bar. </p>" +
+        "<p><b>Your task is to report how easily you can see a face in the image.</b>.</p>" +
+        "<p>If you can easily see a face in the image, move the slider bar to the right to a large number. </br> If you cannot easily see a face in the image (or not at all), move the slider bar to the left to a small number. </p>",
+        "<p>The images you see will contain humans, animals, and inanimate objects. However, your task is not to judge the category of the stimulus presented. Rather, <b>your task is to judge how easily a face is visible in the image as it is presented to you</b>. Indeed, you may even see some images of inanimate objects, in which a face is easily visible. So take your time to respond accurately by moving the slider bar to a value that reflects how easily you are able to perceive a face.</p>" +
+        "<p>At the end, you will be rewarded for your effort and for your accurate performance.</p>",
+        "<p>We will now begin the task! We expect this to take approximately 10 minutes. Please do not rush through the task. </p>"+
+        "<p>Remember: you are judging, on a scale of 0 to 10, how easily you can see a <strong> face </strong> in the image, exactly as it is presented to you.</p>" +
+        "<p>Press next to begin the task. Good luck! </p>"
+      ],
+      show_clickable_nav: true,
+      post_trial_gap: 1000,
+    };
+   
+    /* define trial stimuli array for timeline variables */
+    var all_imgs = stimulus_info.all_images;
+    var test_stimuli = [];
+
+    for (i = 0; i<numTrials; i++){
+      test_stimuli.push({stimulus: "imgs/" + all_imgs[randint(all_imgs.length)]});
+    }
+
+    // define fixation and test trials
+    var fixation = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<div style="font-size:60px;">+</div>',
+      choices: "NO_KEYS",
+      trial_duration: 500,
+      data: {
+        task: 'fixation'
+      }
+    };
+
+    var test = {
+      type: jsPsychImageSliderResponse,
+      stimulus: jsPsych.timelineVariable('stimulus'),
+      stimulus_width: 600,
+      prompt: "How easily can you see a face in this image?",
+      labels: ['0</br>Cannot see a face','1', '2', '3', '4', '5', '6', '7', '8', '9', '10</br>Easily see a face'],
+        min: 0,
+        max: 10,
+        step: 1,
+        slider_start: 5,
+        require_movement: true,
+        data: {
+          task: 'slider',
+          //correct_response: jsPsych.timelineVariable('correct_response')
+        },
+        on_finish: function(data){
+          //data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+          save_trial_to_database(data)
+        }
+    };
+
+    // define test procedure
+    var test_procedure = {
+      timeline: [fixation, test],
+      timeline_variables: test_stimuli,
+      repetitions: 1,
+      randomize_order: true
+    };
+
+    var postexp_question = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: '<p>Some of the images that you saw appeared jumbled. How frequently did you try to mentally shift the parts to make them whole again?</p>',
+      choices: ['Never', 'Rarely', 'Sometimes', 'Most of the time', 'Always'],
+      data: {
+        task: 'postquestion',
+      },
+      on_finish: function(data){
+        save_trial_to_database(data)
+      }
+    }
+
+    // define debrief
+    var debrief_block = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: function() {
+
+        var trials = jsPsych.data.get().filter({task: 'slider'});
+        var correct_trials = trials.filter({correct: true});
+        var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
+        var rt = Math.round(trials.select('rt').mean());
+
+        return `<p>You have completed the experiment!</p>
+          <p>Your average response time was ${rt}ms.</p>
+          <p>Press any key to complete the experiment. Thank you!</p>`;
+      }
+    };
+
+    // Add to timeline
+    var timeline = [];
+    timeline.push(preload);
+    timeline.push(instructions);
+    timeline.push(test_procedure);
+    timeline.push(postexp_question);
+    timeline.push(debrief_block);
+
+    // start the experiment 
+    jsPsych.run(timeline);
+
+  </script>
+</html>
