@@ -15,8 +15,7 @@
     <link rel="stylesheet" href="exp_style.css">
     <script type="text/javascript" src="./socket.io/socket.io.js"></script>
     <script src="functions.js"></script>
-    <script src="trial_info/trials_merged.json"></script>
-    <script src="trial_info/cc_trials_merged.json"></script>
+    <script src="trial_info/cueconflict_trials_merged_2025-01.json"></script>
     <style>
     img{
         vertical-align: middle;
@@ -31,7 +30,7 @@
       on_finish: function() {
         console.log('Experiment complete!!!');
         //window.location = 'https://theuselessweb.com/'; // 'https://app.prolific.com/submissions/complete?cc=CK5XXXER'
-        window.location = 'https://app.prolific.com/submissions/complete?cc=CX03L7YQ';
+        window.location = 'https://app.prolific.com/submissions/complete?cc=C10TIMLV';
 
         //jsPsych.data.displayData();
       }
@@ -40,24 +39,16 @@
     var study_id = jsPsych.data.getURLVariable('STUDY_ID');
     var session_id = jsPsych.data.getURLVariable('SESSION_ID');
     var num_trials = 200;
-    var num_lastblock_trials = 50;
-    var trial_indices = randSampleWithoutReplacement(num_trials, 0, 2000);
-    var lastblock_trial_indices = randSampleWithoutReplacement(num_lastblock_trials, 0, 2000);
-    var cueTypes = ['shape', 'texture'];
-    var whichCue = cueTypes[randint(2)];
-
+    var trial_indices = randSampleWithoutReplacement(num_trials, 0, trial_info['trial_idx'].length);
 
     console.log('Subject ID: ' + subject_id);
     console.log('Study ID: ' + study_id);
     console.log('Session ID: ' + session_id);
-    console.log('Cue Type: ' + whichCue);
     jsPsych.data.addProperties({
       subject_id: subject_id,
       study_id: study_id,
       session_id: session_id,
-      trial_indices: trial_indices,
-      lastblock_trial_indices: lastblock_trial_indices,
-      whichCue: whichCue
+      experiment_name: "texture-shape_2025-01"
     });
 
     /* create timeline */
@@ -80,7 +71,7 @@
         "<p>In this experiment, you will complete a series of trials. On each trial, you will first see an image flashed very briefly on the screen - we call this first image the 'test image'. You will then be shown two images and asked to choose the one which appears more visually similar to the initially presented test image. You will indicate your response by pressing either the left arrow key or the right arrow key. After you submit your answer, you will automatically move onto the next question. </p>",
         "<p>Below is an example video of a few trials. Each trial begins with a small cross in the middle of the screen, which tells you to get ready! Then the 'test' image will be shown on the screen and will then quickly disappear, and you will then be shown two choices. You must press either the left arrow key or the right arrow key on your keyboard to indicate which of these two choices looks more similar to the test image. There is no time limit to respond; however, we encourage you to respond as quickly as possible while maintaining accurate responses. </p>" +
         "<p><img src='instructions/2afc_mts.gif' width='500'></p>",
-        "<p>We will now begin the task! We expect this to take approximately 20 minutes. We have placed break points every 2-3 minutes to give you a chance to take a rest if needed before proceeding. <br> Please do not rush through the task. At the end, you will be rewarded for your effort and for your accurate performance.</p>" +
+        "<p>We will now begin the task! We expect this to take approximately 20 minutes. We have placed break points every 2-3 minutes to give you a chance to take a rest if needed before proceeding. <br> Please try to respond as quickly as possible but do not rush through the task. At the end, you will be rewarded for your effort and for your accurate performance.</p>" +
         "<p>Remember: your task is to observe closely the test image and then choose which of the two choices below looks most similar to the test image.</p>" +
         "<p>Press next to begin the task. Good luck! </p>"
       ],
@@ -124,14 +115,13 @@
       }
 
       let choices_i = choice_imgs[idx];
-      choices_i[0] = 'all_imgs/' + choices_i[0] + '.png';
-      choices_i[1] = 'all_imgs/' + choices_i[1] + '.png';
-
-      preload.images.push(choices_i[0], choices_i[1]);
+      let choice0 = 'all_imgs/' + choices_i[0] + '.png';
+      let choice1 = 'all_imgs/' + choices_i[1] + '.png';
+      preload.images.push(choice0, choice1);
 
       var choice_trial = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: `<img src="${choices_i[choice_order[i][0]]}" width="${stimwidth}" style="margin-right: 20px;"><img src="${choices_i[choice_order[i][1]]}" width="${stimwidth}">`,
+        stimulus: `<img src="all_imgs/${choices_i[choice_order[i][0]]}.png" width="${stimwidth}" style="margin-right: 20px;"><img src="all_imgs/${choices_i[choice_order[i][1]]}.png" width="${stimwidth}">`,
         choices: ['ArrowLeft', 'ArrowRight'],
         prompt: "Press either the left or right arrow key to indicate which image looked more like the previous one.",
         data: {
@@ -173,62 +163,33 @@
       } 
 
     }
-   
-    var postexp_question = {
-      type: jsPsychHtmlButtonResponse,
-      stimulus: '<p>The choice images you saw sometimes matched the test image in shape, sometimes in texture, and sometimes in color. Which feature did you most often use to choose the image most similar to the test image?</p>',
-      choices: ['Mostly shape', 'Mostly texture', 'Mostly color', 'No consistent strategy', 'Didnt think about it, just went with my gut'],
-      data: {
-        task: 'postquestion',
-      },
-      on_finish: function(data){
-        save_trial_to_database(data)
-      }
-    }
-
     /* define instructions trial */
-    if (whichCue == 'shape') {
-      var lastblock_instructions = {
-        type: jsPsychInstructions,
-        pages: [
-          "<p style= 'font-size:300%'><b>Last block: Shape-based Discrimination</b></br></p>" +
-          "<p>Nice job thus far. You're almost done with the experiment. We just have one last set of trials to go: for these trials, we want you to especially focus on the shape of the objects, not on their color or texture, when deciding which of the two choices is more similar to the initially presented test image. </p>",
-          "<p>Below is an example of the 3 images you might see in one trial. For illustration purposes, we've shown all 3 images together, though in a real trial, the test image would be shown first and then only after it disappears, you would see the two choice images. </p>" +
-          "<p><img src='instructions/exampletrial.png' width='500'></p>"+
-          "<p> Now in this example, the test image has the shape of a desk but has the texture and color of an orange brick. Each of the choices shares something in common with the test image - choice 1 has a similar shape, as it is also a desk, and choice 2 has a similar orange brick texture/color. For all of the remaining trials in this experiment, we want you to pick the choice with the more similar <strong> shape/category </strong>  to the test image. Therefore, on this trial, you would choose choice 1 and would click the left arrow to indicate your choice.</p>",
-          "<p>We will now begin the final block! Remember: your task is to observe closely the test image and then choose which of the two choices below has the most similar <strong> shape </strong> to the test image.</p>" +
-          "<p>Press next to begin the final block. Good luck! </p>"
-        ],
-        show_clickable_nav: true,
-        post_trial_gap: 1000,
-      };
-    } 
-    else {
-      var lastblock_instructions = {
-        type: jsPsychInstructions,
-        pages: [
-          "<p style= 'font-size:300%'><b>Last block: Texture-based Discrimination</b></br></p>" +
-          "<p>Nice job thus far. You're almost done with the experiment. We just have one last set of trials to go: for these trials, we want you to especially focus on the texture of the objects, not on their shape or category, when deciding which of the two choices is more similar to the initially presented test image. </p>",
-          "<p>Below is an example of the 3 images you might see in one trial. For illustration purposes, we've shown all 3 images together, though in a real trial, the test image would be shown first and then only after it disappears, you would see the two choice images. </p>" +
-          "<p><img src='instructions/exampletrial.png' width='500'></p>"+
-          "<p> Now in this example, the test image has the shape of a desk but has the texture and color of an orange brick. Each of the choices shares something in common with the test image - choice 1 has a similar shape, as it is also a desk, and choice 2 has a similar orange brick texture/color. For all of the remaining trials in this experiment, we want you to pick the choice with the more similar <strong> texture/color </strong>  to the test image. Therefore, on this trial, you would choose choice 2 and would click the right arrow to indicate your choice.</p>",
-          "<p>We will now begin the final block! Remember: your task is to observe closely the test image and then choose which of the two choices below has the most similar <strong> texture </strong> to the test image.</p>" +
-          "<p>Press next to begin the final block. Good luck! </p>"
-        ],
-        show_clickable_nav: true,
-        post_trial_gap: 1000,
-      };   
-    }
+   var lastblock_instructions = {
+      type: jsPsychInstructions,
+      pages: [
+        "<p style= 'font-size:300%'><b>Last block: let's do it faster!</b></br></p>" +
+        "<p>Nice job thus far. You're almost done with the experiment. We just have one last set of trials to go: for these trials, we are going to speed up the presentation time, so you will see the initial image for a much shorter amount of time. Other than that change, everything else will stay the same. </p>",
+        "<p>We will now begin the final block! Remember: your task is to observe closely the test image and then choose which of the two choices below appears most similar to the test image. Get ready - the images will flash much more quickly than you're used to!</p>" +
+        "<p>Press next to begin the final block. Good luck! </p>"
+      ],
+      show_clickable_nav: true,
+      post_trial_gap: 1000,
+    };   
  
-    var sample_imgs = cc_trial_info['sample_img'];
-    var choice_imgs = cc_trial_info['choice_imgs'];
-    var trial_type = cc_trial_info['trial_type'];
-    var choice_order = cc_trial_info['choice_order'];
-    var stim_set = cc_trial_info['stim_set'];
-  
+    var lb_sample_imgs = trial_info['sample_img'];
+    var lb_choice_imgs = trial_info['choice_imgs'];
+    var lb_trial_type = trial_info['trial_type'];
+    var lb_choice_order = trial_info['choice_order'];
+    var lb_stim_set = trial_info['stim_set'];
+
     var lastblock_trials = [];
+    var durations = [50, 100, 150]; // ms
+    var stimwidth = 400; // pix
+
     for (i = 0; i<num_lastblock_trials; i++){
-      idx = lastblock_trial_indices[i];
+      lb_idx = lastblock_trial_indices[i];
+
+      let trl_duration = durations[randint(durations.length)];
 
       var fixation = {
         type: jsPsychHtmlKeyboardResponse,
@@ -240,34 +201,34 @@
         }
       };
 
-      var sample_trial = {
+      var lb_sample_trial = {
         type: jsPsychImageKeyboardResponse,
-        stimulus: 'all_imgs/' + sample_imgs[idx] + '.png',
-        stimulus_width: 400,
-        trial_duration: 500,
+        stimulus: 'all_imgs/' + lb_sample_imgs[lb_idx] + '.png',
+        stimulus_width: stimwidth,
+        trial_duration: trl_duration,
         post_trial_gap: 1000,
       }
 
-      let choices_i = choice_imgs[idx];
-      choices_i[0] = 'all_imgs/' + choices_i[0] + '.png';
-      choices_i[1] = 'all_imgs/' + choices_i[1] + '.png';
+      let lb_choices_i = lb_choice_imgs[lb_idx];
+      preload.images.push('all_imgs/' + lb_choices_i[0] + '.png', 'all_imgs/' + lb_choices_i[1] + '.png');
 
-      preload.images.push(choices_i[0], choices_i[1]);
 
-      var choice_trial = {
+      var lb_choice_trial = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: `<img src="${choices_i[choice_order[i][0]]}" width="400" style="margin-right: 20px;"><img src="${choices_i[choice_order[i][1]]}" width="400">`,
+        stimulus: `<img src="all_imgs/${lb_choices_i[lb_choice_order[i][0]]}.png" width="${stimwidth}" style="margin-right: 20px;"><img src="all_imgs/${lb_choices_i[lb_choice_order[i][1]]}.png" width="${stimwidth}">`,
         choices: ['ArrowLeft', 'ArrowRight'],
-        prompt: "Press either the left or right arrow key to indicate which image had more similar " + whichCue + " to the test image.",
+        prompt: "Press either the left or right arrow key to indicate which image looked more like the previous one.",
         data: {
-          task: 'cued_matchtosample',
-          trial_id: idx,
-          sample: sample_imgs[idx],
-          choice1: choice_imgs[idx][choice_order[idx][0]],
-          choice2: choice_imgs[idx][choice_order[idx][1]],
-          correct_choice: choice_imgs[idx][1],
-          stim_set: stim_set[idx],
-          tasktype: trial_type[idx] + '_cue' + whichCue,
+          task: 'matchtosample',
+          trial_id: lb_idx,
+          sample: lb_sample_imgs[lb_idx],
+          choice1: lb_choice_imgs[lb_idx][lb_choice_order[lb_idx][0]],
+          choice2: lb_choice_imgs[lb_idx][lb_choice_order[lb_idx][1]],
+          correct_choice: lb_choice_imgs[lb_idx][1],
+          stim_set: lb_stim_set[lb_idx],
+          tasktype: lb_trial_type[lb_idx],
+          sample_duration: trl_duration,
+          image_size_px: stimwidth,
         },
         on_finish: function(data){
           if(data.response == 'arrowleft'){
@@ -284,8 +245,31 @@
         }
       };
 
-      lastblock_trials.push(fixation, sample_trial, choice_trial);
-    } // end for loop
+      lastblock_trials.push(fixation, lb_sample_trial, lb_choice_trial);
+
+      if (i>0 && i % 100 == 0){
+        var trial_break = {
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: '<p></p>',
+          prompt: Math.floor(i/100) + ' out of 1 trial blocks complete. Press any key to begin the next block of trials',
+        };
+        lastblock_trials.push(trial_break);
+      } 
+
+    }
+   
+    var postexp_question = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: '<p>The choice images you saw sometimes matched the test image in shape, sometimes in texture, and sometimes in color. Which feature did you most often use to choose the image most similar to the test image?</p>',
+      choices: ['Mostly shape', 'Mostly texture', 'Mostly color', 'No consistent strategy', 'Didnt think about it, just went with my gut'],
+      data: {
+        task: 'postquestion',
+      },
+      on_finish: function(data){
+        save_trial_to_database(data)
+      }
+    }
+
 
     // define debrief
     var debrief_block = {
@@ -306,9 +290,9 @@
     timeline.push(preload);
     timeline.push(instructions);
     timeline.push(...trials);
-    timeline.push(postexp_question);
     timeline.push(lastblock_instructions);
     timeline.push(...lastblock_trials);
+    timeline.push(postexp_question);
     timeline.push(debrief_block);
 
     // start the experiment 
