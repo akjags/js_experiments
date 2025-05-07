@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="exp_style.css">
     <script type="text/javascript" src="./socket.io/socket.io.js"></script>
     <script src="functions.js"></script>
-    <script src="trial_info/cueconflict_trials_merged_2025-01.json"></script>
+    <script src="trial_info/trial_info.json"></script>
     <style>
     img{
         vertical-align: middle;
@@ -39,7 +39,17 @@
     var study_id = jsPsych.data.getURLVariable('STUDY_ID');
     var session_id = jsPsych.data.getURLVariable('SESSION_ID');
     var num_trials = 200;
-    var trial_indices = randSampleWithoutReplacement(num_trials, 0, trial_info['trial_idx'].length);
+
+    var all_trials = trial_info['trials'];
+    var video_conditions = trial_info['video_conditions'];
+    var object_conditions = trial_info['object_conditions'];
+    var choice_idxs = trial_info['choice_idxs'];
+
+    var my_object_condition = object_conditions[randint(len(object_conditions))];
+    var my_video_condition = video_conditions[randint(len(video_conditions))];
+    var trial_indices = trial_info[my_object_condition];
+    var my_video = trial_info['videos'][my_video_condition][my_object_condition];
+
 
     console.log('Subject ID: ' + subject_id);
     console.log('Study ID: ' + study_id);
@@ -48,7 +58,9 @@
       subject_id: subject_id,
       study_id: study_id,
       session_id: session_id,
-      experiment_name: "texture-shape_2025-01"
+      object_condition: my_object_condition,
+      video_condition: my_video_condition,
+      experiment_name: "spatiotemporal_learning"
     });
 
     /* create timeline */
@@ -68,33 +80,35 @@
         "<p style= 'font-size:200%' ><b>Welcome to our experiment!</b></br></p>" +
         "<p>This is a visual judgment experiment. Let's start off with some instructions. </p>",
         "<p style= 'font-size:300%'><b>Image similarity judgment</b></br></p>" +
-        "<p>In this experiment, you will complete a series of trials. On each trial, you will first see an image flashed very briefly on the screen - we call this first image the 'test image'. You will then be shown two images and asked to choose the one which appears more visually similar to the initially presented test image. You will indicate your response by pressing either the left arrow key or the right arrow key. After you submit your answer, you will automatically move onto the next question. </p>",
-        "<p>Below is an example video of a few trials. Each trial begins with a small cross in the middle of the screen, which tells you to get ready! Then the 'test' image will be shown on the screen and will then quickly disappear, and you will then be shown two choices. You must press either the left arrow key or the right arrow key on your keyboard to indicate which of these two choices looks more similar to the test image. There is no time limit to respond; however, we encourage you to respond as quickly as possible while maintaining accurate responses. </p>" +
+        "<p>This experiment has two components: a studying phase and a testing phase. In the studying phase, you will be shown a video of an object - it is your task to study this object for as long as you need to fully learn it such that you could easily recognize it later on, even from a different angle. </p>" +
+        "<p>Then when you are ready, you can proceed to the testing phase, wherein you will complete a series of match-to-sample trials. On each trial, you will first see an image flashed very briefly on the screen - we call this first image the 'sample image'. You will then be shown two images and asked to choose the one which contains the same object as the initially presented sample image. You will indicate your response by pressing either the left arrow key or the right arrow key. After you submit your answer, you will automatically move onto the next question. </p>",
+        "<p>Below is an example video of a few trials. Each trial begins with a small cross in the middle of the screen, which tells you to get ready! Then the 'sample' image will be shown on the screen and will then quickly disappear, and you will then be shown two choices. You must press either the left arrow key or the right arrow key on your keyboard to indicate which of these two choices is an image of the same object as the sample image. Note that the correct choice may be from a different viewpoint so the object may not look exactly the same, but this is what makes the task challenging! You must identify the match even though it will be a rotated version of that object.</p>"+
+        "<p>There is no time limit to respond; however, we encourage you to respond as quickly as possible while maintaining accurate responses. </p>" +
         "<p><img src='instructions/2afc_mts.gif' width='500'></p>",
         "<p>We will now begin the task! We expect this to take approximately 20 minutes. We have placed break points every 2-3 minutes to give you a chance to take a rest if needed before proceeding. <br> Please try to respond as quickly as possible but do not rush through the task. At the end, you will be rewarded for your effort and for your accurate performance.</p>" +
         "<p>Remember: your task is to observe closely the test image and then choose which of the two choices below looks most similar to the test image.</p>" +
-        "<p>Press next to begin the task. Good luck! </p>"
+        "<p>Press next to enter the studying phase of the task. Good luck! </p>",
+        "<p style= 'font-size:300%'><b>Study this object closely. Take as long as you need.</b></br></p>" +
+        "<p><img src='rotating_objects/shape_6_blocky_007_equator_2x_4fps.gif' width='500'></p>",
+        "<p>When you feel like you know this object well and would be able to recognize it easily later on, press next to begin the testing phase. </p>" +
       ],
       show_clickable_nav: true,
       post_trial_gap: 1000,
     };
    
     /* define trial stimuli array for timeline variables */
-    //var all_imgs = stimulus_info.all_images;
-
-    var sample_imgs = trial_info['sample_img'];
-    var choice_imgs = trial_info['choice_imgs'];
-    var trial_type = trial_info['trial_type'];
-    var choice_order = trial_info['choice_order'];
-    var stim_set = trial_info['stim_set'];
-
-
     var trials = [];
     var duration = 500; // ms
     var stimwidth = 400; // pix
 
     for (i = 0; i<num_trials; i++){
       idx = trial_indices[i];
+      trial = all_trials[idx]
+      trial_choice_idx = choice_idx[idx];
+
+      trial_sample = trial[0];
+      trial_choices = [trial[1], trials[2]];
+      ordered_choices = []
 
       var fixation = {
         type: jsPsychHtmlKeyboardResponse,
@@ -108,31 +122,29 @@
 
       var sample_trial = {
         type: jsPsychImageKeyboardResponse,
-        stimulus: 'all_imgs/' + sample_imgs[idx] + '.png',
+        stimulus: 'all_imgs/' + trial_sample + '.png',
         stimulus_width: stimwidth,
         trial_duration: duration,
         post_trial_gap: 1000,
       }
 
-      let choices_i = choice_imgs[idx];
-      let choice0 = 'all_imgs/' + choices_i[0] + '.png';
-      let choice1 = 'all_imgs/' + choices_i[1] + '.png';
+      let choiceL = trial_choices[trial_choice_idx[0]];
+      let choiceR = trial_choices[trial_choice_idx[1]];
       preload.images.push(choice0, choice1);
 
       var choice_trial = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: `<img src="all_imgs/${choices_i[choice_order[i][0]]}.png" width="${stimwidth}" style="margin-right: 20px;"><img src="all_imgs/${choices_i[choice_order[i][1]]}.png" width="${stimwidth}">`,
+        stimulus: `<img src="all_imgs/${choiceL}" width="${stimwidth}" style="margin-right: 20px;"><img src="all_imgs/${choiceR}" width="${stimwidth}">`,
         choices: ['ArrowLeft', 'ArrowRight'],
-        prompt: "Press either the left or right arrow key to indicate which image looked more like the previous one.",
+        prompt: "Press either the left or right arrow key to indicate which object is the same as the object that was briefly flashed.",
         data: {
           task: 'matchtosample',
           trial_id: idx,
-          sample: sample_imgs[idx],
-          choice1: choice_imgs[idx][choice_order[idx][0]],
-          choice2: choice_imgs[idx][choice_order[idx][1]],
-          correct_choice: choice_imgs[idx][1],
-          stim_set: stim_set[idx],
-          tasktype: trial_type[idx],
+          sample: trial_sample,
+          choiceL: choiceL,
+          choiceR: choiceR,
+          trial_idx: trial_choice_idx,
+          correct_choice: trial_choices[0],
           sample_duration: duration,
           image_size_px: stimwidth,
         },
@@ -153,115 +165,21 @@
 
       trials.push(fixation, sample_trial, choice_trial);
 
-      if (i>0 && i % 50 == 0){
+      if (i>0 && i % 20 == 0){
         var trial_break = {
           type: jsPsychHtmlKeyboardResponse,
           stimulus: '<p></p>',
-          prompt: Math.floor(i/50) + ' out of 5 trial blocks complete. Press any key to begin the next block of trials',
+          prompt: Math.floor(i/20) + ' out of 5 trial blocks complete. Press any key to begin the next block of trials',
         };
         trials.push(trial_break);
-      } 
-
-    }
-    /* define instructions trial */
-   var lastblock_instructions = {
-      type: jsPsychInstructions,
-      pages: [
-        "<p style= 'font-size:300%'><b>Last block: let's do it faster!</b></br></p>" +
-        "<p>Nice job thus far. You're almost done with the experiment. We just have one last set of trials to go: for these trials, we are going to speed up the presentation time, so you will see the initial image for a much shorter amount of time. Other than that change, everything else will stay the same. </p>",
-        "<p>We will now begin the final block! Remember: your task is to observe closely the test image and then choose which of the two choices below appears most similar to the test image. Get ready - the images will flash much more quickly than you're used to!</p>" +
-        "<p>Press next to begin the final block. Good luck! </p>"
-      ],
-      show_clickable_nav: true,
-      post_trial_gap: 1000,
-    };   
- 
-    var lb_sample_imgs = trial_info['sample_img'];
-    var lb_choice_imgs = trial_info['choice_imgs'];
-    var lb_trial_type = trial_info['trial_type'];
-    var lb_choice_order = trial_info['choice_order'];
-    var lb_stim_set = trial_info['stim_set'];
-
-    var lastblock_trials = [];
-    var durations = [50, 100, 150]; // ms
-    var stimwidth = 400; // pix
-
-    for (i = 0; i<num_lastblock_trials; i++){
-      lb_idx = lastblock_trial_indices[i];
-
-      let trl_duration = durations[randint(durations.length)];
-
-      var fixation = {
-        type: jsPsychHtmlKeyboardResponse,
-        stimulus: '<div style="font-size:60px;">+</div>',
-        choices: "NO_KEYS",
-        trial_duration: 500,
-        data: {
-          task: 'fixation'
-        }
-      };
-
-      var lb_sample_trial = {
-        type: jsPsychImageKeyboardResponse,
-        stimulus: 'all_imgs/' + lb_sample_imgs[lb_idx] + '.png',
-        stimulus_width: stimwidth,
-        trial_duration: trl_duration,
-        post_trial_gap: 1000,
-      }
-
-      let lb_choices_i = lb_choice_imgs[lb_idx];
-      preload.images.push('all_imgs/' + lb_choices_i[0] + '.png', 'all_imgs/' + lb_choices_i[1] + '.png');
-
-
-      var lb_choice_trial = {
-        type: jsPsychHtmlKeyboardResponse,
-        stimulus: `<img src="all_imgs/${lb_choices_i[lb_choice_order[i][0]]}.png" width="${stimwidth}" style="margin-right: 20px;"><img src="all_imgs/${lb_choices_i[lb_choice_order[i][1]]}.png" width="${stimwidth}">`,
-        choices: ['ArrowLeft', 'ArrowRight'],
-        prompt: "Press either the left or right arrow key to indicate which image looked more like the previous one.",
-        data: {
-          task: 'matchtosample',
-          trial_id: lb_idx,
-          sample: lb_sample_imgs[lb_idx],
-          choice1: lb_choice_imgs[lb_idx][lb_choice_order[lb_idx][0]],
-          choice2: lb_choice_imgs[lb_idx][lb_choice_order[lb_idx][1]],
-          correct_choice: lb_choice_imgs[lb_idx][1],
-          stim_set: lb_stim_set[lb_idx],
-          tasktype: lb_trial_type[lb_idx],
-          sample_duration: trl_duration,
-          image_size_px: stimwidth,
-        },
-        on_finish: function(data){
-          if(data.response == 'arrowleft'){
-            data.subject_choice_num = 0;
-          } else if (data.response == 'arrowright') {
-            data.subject_choice_num = 1;
-          } else {
-            data.subject_choice_num = -1;
-          }
-          choices = [data.choice1, data.choice2];
-
-          data.subject_choice = choices[data.subject_choice_num];
-          save_trial_to_database(data);
-        }
-      };
-
-      lastblock_trials.push(fixation, lb_sample_trial, lb_choice_trial);
-
-      if (i>0 && i % 100 == 0){
-        var trial_break = {
-          type: jsPsychHtmlKeyboardResponse,
-          stimulus: '<p></p>',
-          prompt: Math.floor(i/100) + ' out of 1 trial blocks complete. Press any key to begin the next block of trials',
-        };
-        lastblock_trials.push(trial_break);
       } 
 
     }
    
     var postexp_question = {
       type: jsPsychHtmlButtonResponse,
-      stimulus: '<p>The choice images you saw sometimes matched the test image in shape, sometimes in texture, and sometimes in color. Which feature did you most often use to choose the image most similar to the test image?</p>',
-      choices: ['Mostly shape', 'Mostly texture', 'Mostly color', 'No consistent strategy', 'Didnt think about it, just went with my gut'],
+      stimulus: '<p>How difficult did you find this task?</p>',
+      choices: ['Very easy', 'easy', 'moderate', 'hard', 'very hard'],
       data: {
         task: 'postquestion',
       },
