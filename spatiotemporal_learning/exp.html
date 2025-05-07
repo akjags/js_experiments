@@ -45,8 +45,8 @@
     var object_conditions = trial_info['object_conditions'];
     var choice_idxs = trial_info['choice_idxs'];
 
-    var my_object_condition = object_conditions[randint(len(object_conditions))];
-    var my_video_condition = video_conditions[randint(len(video_conditions))];
+    var my_object_condition = object_conditions[randint(object_conditions.length)];
+    var my_video_condition = video_conditions[randint(video_conditions.length)];
     var trial_indices = trial_info[my_object_condition];
     var my_video = trial_info['videos'][my_video_condition][my_object_condition];
 
@@ -102,13 +102,13 @@
     var stimwidth = 400; // pix
 
     for (i = 0; i<num_trials; i++){
-      idx = trial_indices[i];
-      trial = all_trials[idx]
-      trial_choice_idx = choice_idx[idx];
+      let idx = trial_indices[i];
+      let trial = all_trials[idx]
+      let trial_choice_idx = choice_idxs[idx];
 
-      trial_sample = trial[0];
-      trial_choices = [trial[1], trials[2]];
-      ordered_choices = []
+      let trial_sample = trial[0];
+      let trial_choices = [trial[1], trials[2]];
+      let ordered_choices = [];
 
       var fixation = {
         type: jsPsychHtmlKeyboardResponse,
@@ -130,7 +130,7 @@
 
       let choiceL = trial_choices[trial_choice_idx[0]];
       let choiceR = trial_choices[trial_choice_idx[1]];
-      preload.images.push(choice0, choice1);
+      preload.images.push(choiceL, choiceR);
 
       var choice_trial = {
         type: jsPsychHtmlKeyboardResponse,
