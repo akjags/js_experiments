@@ -15,8 +15,14 @@ const client = new MongoClient(url);
 
 
 // set database and collection we'll be using
-const dbName = 'faceness_pareidolia';
-const collectionName = 'data_20230322';
+const dbName = 'texture-shape';
+const collectionName = 'experiment_20250122';
+
+var dir = './data';
+
+if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir);
+}
  
 async function writeToDB() {
   await client.connect();
@@ -47,8 +53,8 @@ async function fetchAndSaveData() {
     const json = JSON.stringify(documents, null, 2);
     
     // Save the JSON string to a file
-    fs.writeFileSync(dbName+'_'+collectionName+'_output.json', json);
-    console.log('Data has been saved to output.json');
+    fs.writeFileSync(dir + '/' + dbName+'_'+collectionName+'_data.json', json);
+    console.log('Data from ' + dbName+'_'+collectionName + ' has been saved to ' + dir + ' as a .json');
   } catch (err) {
     console.error('Failed to fetch and save data:', err);
   } finally {

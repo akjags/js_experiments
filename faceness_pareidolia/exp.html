@@ -15,6 +15,12 @@
     <script type="text/javascript" src="./socket.io/socket.io.js"></script>
     <script src="functions.js"></script>
     <script src="stimulus_information.json"></script>
+    <style>
+    img{
+        vertical-align: middle;
+    }
+    </style>
+
   </head>
   <body></body>
   <script>
@@ -22,7 +28,8 @@
     var jsPsych = initJsPsych({
       on_finish: function() {
         console.log('Experiment complete!!!');
-        window.location = 'https://theuselessweb.com/'; // 'https://app.prolific.com/submissions/complete?cc=CK5XXXER'
+        //window.location = 'https://theuselessweb.com/'; // 'https://app.prolific.com/submissions/complete?cc=CK5XXXER'
+        window.location = 'https://app.prolific.com/submissions/complete?cc=CON37X9O';
 
         //jsPsych.data.displayData();
       }
@@ -30,13 +37,16 @@
     var subject_id = jsPsych.data.getURLVariable('PROLIFIC_PID');
     var study_id = jsPsych.data.getURLVariable('STUDY_ID');
     var session_id = jsPsych.data.getURLVariable('SESSION_ID');
+    var folder_id = 1+randint(100); // get random number between 1 and 100.
     console.log('Subject ID: ' + subject_id);
     console.log('Study ID: ' + study_id);
     console.log('Session ID: ' + session_id);
+    console.log('Folder ID: ' + folder_id);
     jsPsych.data.addProperties({
       subject_id: subject_id,
       study_id: study_id,
-      session_id: session_id
+      session_id: session_id,
+      imagefolder_id: folder_id
     });
 
     /* create timeline */
@@ -54,15 +64,21 @@
       pages: [
         // First page: Welcome!
         "<p style= 'font-size:200%' ><b>Welcome to our experiment!</b></br></p>" +
-        "<p>This is a visual judgment experiment. Let's start off with some instructions </p>.",
-        "<p style= 'font-size:150%'><b>Experiment Instructions</b></br></p>" +
-        "<p>In this experiment, you will complete a series of trials. On each trial, you will be shown an image. Below it will be a slider bar. </p>" +
-        "<p><b>Your task is to report how easily you can see a face in the image.</b>.</p>" +
-        "<p>If you can easily see a face in the image, move the slider bar to the right to a large number. </br> If you cannot easily see a face in the image (or not at all), move the slider bar to the left to a small number. </p>",
-        "<p>The images you see will contain humans, animals, and inanimate objects. However, your task is not to judge the category of the stimulus presented. Rather, <b>your task is to judge how easily a face is visible in the image as it is presented to you</b>. Indeed, you may even see some images of inanimate objects, in which a face is easily visible. So take your time to respond accurately by moving the slider bar to a value that reflects how easily you are able to perceive a face.</p>" +
-        "<p>At the end, you will be rewarded for your effort and for your accurate performance.</p>",
-        "<p>We will now begin the task! We expect this to take approximately 10 minutes. Please do not rush through the task. </p>"+
-        "<p>Remember: you are judging, on a scale of 0 to 10, how easily you can see a <strong> face </strong> in the image, exactly as it is presented to you.</p>" +
+        "<p>This is a visual judgment experiment. Let's start off with some instructions. </p>",
+        "<p style= 'font-size:300%'><b>Can you see a face?</b></br></p>" +
+        "<p>In this experiment, you will complete a series of trials. On each trial, you will be shown an image. Please answer the question for each image shown. After you submit your answer, you will automatically move onto the next question. </p>" +
+        "<p>Your task is to report how easily you can see a face in the image on a scale from 0 to 10.</p>" +
+        "<p> Here are some examples of the kinds of images you might see. </p>" + 
+        "<p><b> We want to see which images might look like faces, even if they aren't a human face.</b></p>"+
+        "<p><img src='sample_imgs/kasper.jpeg' alt='Face' width='270'> <span>Some images will be human faces.</span></p>"+
+        "<p><img src='sample_imgs/face_eggs.png' alt='Object with face' width='270'> <span>Some images might look like a face.</span></p>" +
+        "<p><img src='sample_imgs/eggs.png' alt='No face' width='270'> <span>Some images may not look like a face.</span></p>",
+
+        "<p>Once again, <b>your task is to judge how easily a face is visible in the image as it is presented to you</b>. You will indicate your response by moving a slider bar to a number between 0 (cannot see a face) and 10 (can easily see a face). You must move the slider bar and click the Continue button to proceed to the next trial. Take your time to respond accurately. </p>" +
+        "<p>Below is an example of what the response screen will look like, with the slider below the image.</p>" +
+        "<p><img src='sample_imgs/instructions.png' width='500'></p>",
+        "<p>We will now begin the task! We expect this to take approximately 10 minutes. <br> Please do not rush through the task. At the end, you will be rewarded for your effort and for your accurate performance.</p>" +
+        "<p>Remember: you are rating, on a scale of 0 to 10, how easily you can see a <strong> face </strong> in the image, exactly as it is presented to you.</p>" +
         "<p>Press next to begin the task. Good luck! </p>"
       ],
       show_clickable_nav: true,
@@ -70,13 +86,16 @@
     };
    
     /* define trial stimuli array for timeline variables */
-    var all_imgs = stimulus_info.all_images;
+    //var all_imgs = stimulus_info.all_images;
+
+    var all_imgs = stimulus_info[folder_id];
     var test_stimuli = [];
 
-    for (i = 0; i<numTrials; i++){
-      test_stimuli.push({stimulus: "imgs/" + all_imgs[randint(all_imgs.length)]});
+    for (i = 0; i<all_imgs.length; i++){
+      test_stimuli.push({stimulus: "imgs/Subject_" + zeroPad(folder_id,2) + '/' + all_imgs[i]});
     }
 
+    
     // define fixation and test trials
     var fixation = {
       type: jsPsychHtmlKeyboardResponse,
@@ -92,7 +111,7 @@
       type: jsPsychImageSliderResponse,
       stimulus: jsPsych.timelineVariable('stimulus'),
       stimulus_width: 600,
-      prompt: "How easily can you see a face in this image?",
+      prompt: "Rate how easily you can see a <b>face</b> in this image.",
       labels: ['0</br>Cannot see a face','1', '2', '3', '4', '5', '6', '7', '8', '9', '10</br>Easily see a face'],
         min: 0,
         max: 10,

@@ -8,4 +8,4 @@ var randint = function(max) {
   return Math.floor(Math.random() * max);
 }
 
-
+var zeroPad = (num, places) => String(num).padStart(places, '0');

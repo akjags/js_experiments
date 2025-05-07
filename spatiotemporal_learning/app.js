@@ -11,8 +11,8 @@ const socket_io = require('socket.io');
 
 
 // set database and collection we'll be using
-const database_name = 'faceness_pareidolia'
-const collection_name = 'data_20230322'
+const database_name = 'texture-shape'
+const collection_name = 'experiment_20250122'
  
 // set base directory across modules 
 global.__base = __dirname + '/';
@@ -25,8 +25,8 @@ const external_port = 8888;
 const credentials = '../credentials/'
 // extract relevant info from SSL key and certification
 const options = {
-  key:  fs.readFileSync(credentials + "ssl_privatekey"),
-  cert: fs.readFileSync(credentials + "ssl_certificate")
+  key:  fs.readFileSync(credentials + "ssl_privatekey_2025-01"),
+  cert: fs.readFileSync(credentials + "ssl_certificate_2025-01")
 };
 
 
