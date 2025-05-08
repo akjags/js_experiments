@@ -7434,52 +7434,52 @@ trial_info = {
         ],
         [
             "shape_8_blocky_002_lat-60_lon210.png",
-            "shape_8_blocky_012_lat060_lon150.png",
+            "shape_8_blocky_002_lat-30_lon345.png",
             "shape_8_smooth_001_lat-60_lon210.png"
         ],
         [
             "shape_8_smooth_022_lat060_lon150.png",
-            "shape_8_smooth_001_lat060_lon300.png",
+            "shape_8_smooth_022_lat060_lon330.png",
             "shape_8_blocky_012_lat060_lon150.png"
         ],
         [
             "shape_8_blocky_002_lat060_lon300.png",
-            "shape_8_blocky_015_lat060_lon225.png",
+            "shape_8_blocky_002_lat-30_lon255.png",
             "shape_8_smooth_001_lat060_lon300.png"
         ],
         [
             "shape_8_blocky_015_lat060_lon225.png",
-            "shape_8_blocky_015_lat-60_lon165.png",
+            "shape_8_blocky_015_lat-60_lon180.png",
             "shape_8_smooth_024_lat060_lon225.png"
         ],
         [
             "shape_8_blocky_015_lat-60_lon165.png",
-            "shape_8_blocky_003_lat-90_lon000.png",
+            "shape_8_blocky_015_lat000_lon120.png",
             "shape_8_smooth_024_lat-60_lon165.png"
         ],
         [
             "shape_8_smooth_009_lat-90_lon000.png",
-            "shape_8_smooth_001_lat000_lon330.png",
+            "shape_8_smooth_009_lat-60_lon330.png",
             "shape_8_blocky_003_lat-90_lon000.png"
         ],
         [
             "shape_8_blocky_002_lat000_lon330.png",
-            "shape_8_blocky_003_lat060_lon315.png",
+            "shape_8_blocky_002_lat000_lon240.png",
             "shape_8_smooth_001_lat000_lon330.png"
         ],
         [
             "shape_8_smooth_009_lat060_lon315.png",
-            "shape_8_smooth_001_lat060_lon345.png",
+            "shape_8_smooth_009_lat-60_lon045.png",
             "shape_8_blocky_003_lat060_lon315.png"
         ],
         [
             "shape_8_smooth_001_lat060_lon345.png",
-            "shape_8_smooth_022_lat030_lon180.png",
+            "shape_8_smooth_001_lat000_lon180.png",
             "shape_8_blocky_002_lat060_lon345.png"
         ],
         [
             "shape_8_blocky_012_lat030_lon180.png",
-            "shape_8_blocky_003_lat-30_lon075.png",
+            "shape_8_blocky_012_lat000_lon180.png",
             "shape_8_smooth_022_lat030_lon180.png"
         ]
     ],
